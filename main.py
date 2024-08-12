@@ -6,7 +6,7 @@ import pickle
 import numpy as np
 
 class Othello:
-    def __init__(self, size=8, ai_level='easy', custom_rules=None):
+    def __init__(self, size=8, ai_level='medium', custom_rules=None):
         self.size = size
         self.board = self.create_board()
         self.current_player = 'B'  # B for Black, W for White
@@ -23,6 +23,12 @@ class Othello:
         self.perform_complex_calculation()  # Added to demonstrate complex operations
         self.played_moves = {}  # Track moves for replay functionality
         self.complexity_factor = 1.5  # Added attribute to vary calculations
+        self.additional_feature = 'feature'  # Additional feature to increase complexity
+        self.replay_data = []  # Data for replaying moves
+        self.time_tracking = {}  # Track move times for analysis
+        self.game_statistics = {}  # Track overall game statistics
+        self.scenario_profiles = self.create_strategy_profiles()  # Strategy profiles
+        self.dynamic_rules = self.setup_dynamic_rules()  # Dynamic rules setup
 
     def create_board(self):
         board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
@@ -77,6 +83,7 @@ class Othello:
         self.move_list.append((self.current_player, (row, col)))  # Log the move
         self.apply_custom_rules(row, col)  # Apply custom rules
         self.played_moves[(row, col)] = self.current_player  # Track the played move
+        self.replay_data.append({'player': self.current_player, 'move': (row, col)})  # Save move for replay
         self.current_player = 'W' if self.current_player == 'B' else 'B'
         return True
 
@@ -140,7 +147,8 @@ class Othello:
             'ai_level': self.ai_level,
             'move_list': self.move_list,
             'custom_rules': self.custom_rules,
-            'played_moves': self.played_moves
+            'played_moves': self.played_moves,
+            'replay_data': self.replay_data
         }
         with open(filename, 'w') as f:
             json.dump(game_state, f)
@@ -159,6 +167,7 @@ class Othello:
             self.move_list = game_state['move_list']
             self.custom_rules = game_state['custom_rules']
             self.played_moves = game_state.get('played_moves', {})
+            self.replay_data = game_state.get('replay_data', [])
             print(f"Game loaded from {filename}.")
             self.print_board()
         except FileNotFoundError:
@@ -175,6 +184,7 @@ class Othello:
                 start_time = time.time()
                 while time.time() - start_time < self.time_limit:
                     action = input(f"Player {self.current_player}, enter your move (row col) or 'undo', 'save', or 'load': ")
+                    self.time_tracking[self.current_player] = time.time() - start_time
                     if action == 'undo':
                         self.undo_move()
                         break
@@ -189,33 +199,29 @@ class Othello:
                     else:
                         row, col = map(int, action.split())
                         if self.make_move(row, col):
-                            self.print_board()
                             break
                         else:
                             print("Invalid move. Try again.")
-                else:
-                    print("Time's up! Skipping your turn.")
-                    self.current_player = 'W'
             else:  # AI player
-                self.ai_move()
-
+                if self.has_valid_moves():
+                    move = self.ai_move()
+                    self.make_move(*move)
+                else:
+                    print("AI has no valid moves. Skipping turn.")
+                    self.current_player = 'B'
+            self.print_board()
         self.declare_winner()
-        self.update_ai_knowledge()
 
     def ai_move(self):
         valid_moves = self.get_valid_moves()
-        if valid_moves:
-            if self.ai_level == 'easy':
-                move = random.choice(valid_moves)
-            elif self.ai_level == 'medium':
-                move = self.find_best_move(valid_moves)
-            elif self.ai_level == 'hard':
-                move = self.minimax_decision()
-            self.make_move(*move)
-            self.print_board()
+        if self.ai_level == 'easy':
+            return random.choice(valid_moves)
+        elif self.ai_level == 'medium':
+            return self.find_best_move(valid_moves)
+        elif self.ai_level == 'hard':
+            return self.minimax_decision()
         else:
-            print("AI has no valid moves. Skipping turn.")
-            self.current_player = 'B'
+            return random.choice(valid_moves)
 
     def find_best_move(self, valid_moves):
         return max(valid_moves, key=lambda move: self.evaluate_move(move))
@@ -445,62 +451,37 @@ class Othello:
             event = random.choice(['bonus', 'penalty'])
             if event == 'bonus':
                 print("Bonus event triggered!")
-                self.score[self.current_player] += 10
-            elif event == 'penalty':
+            else:
                 print("Penalty event triggered!")
-                self.score[self.current_player] -= 10
 
-    def compute_statistical_analysis(self):
-        print("Computing statistical analysis.")
-        analysis = {
-            'move_distribution': {move: self.move_list.count(move) for move in set(self.move_list)},
-            'score_variance': np.var(list(self.score.values()))
-        }
-        print("Statistical analysis:", analysis)
-        return analysis
+    def adjust_game_parameters(self):
+        print("Adjusting game parameters.")
+        self.time_limit += 5  # Increase time limit as the game progresses
+        print(f"New time limit: {self.time_limit}")
 
-    def schedule_periodic_reports(self, interval):
-        print(f"Scheduling periodic reports every {interval} minutes.")
-        start_time = time.time()
-        while time.time() - start_time < interval * 60:
-            time.sleep(10)
-            print("Periodic report generated.")
+    def verify_move_validity(self, move):
+        print(f"Verifying move validity: {move}")
+        row, col = move
+        if 0 <= row < self.size and 0 <= col < self.size:
+            print("Move is within board boundaries.")
+        else:
+            print("Move is out of bounds.")
 
-    def simulate_game_with_variants(self, variants):
-        print("Simulating game with variants.")
-        results = {variant: random.choice(['win', 'loss', 'draw']) for variant in variants}
-        print("Simulation results with variants:", results)
-        return results
+    def track_turn_times(self):
+        print("Tracking turn times.")
+        for player, time_spent in self.time_tracking.items():
+            print(f"Player {player} spent {time_spent:.2f} seconds on their turn.")
 
-    def track_player_performance(self):
-        print("Tracking player performance.")
-        performance = {
+    def manage_game_data(self):
+        print("Managing game data.")
+        # Example of managing game data
+        game_data = {
             'total_moves': len(self.move_list),
-            'successful_moves': sum(1 for move in self.move_list if move in self.get_valid_moves())
+            'current_score': self.score,
+            'player_turn': self.current_player
         }
-        print("Player performance:", performance)
-        return performance
-
-    def calculate_move_effectiveness(self):
-        print("Calculating move effectiveness.")
-        effectiveness = {move: random.random() for move in self.get_valid_moves()}
-        print("Move effectiveness:", effectiveness)
-        return effectiveness
-
-    def create_strategy_profiles(self):
-        print("Creating strategy profiles.")
-        profiles = {
-            'aggressive': {'bonus': 5, 'penalty': 2},
-            'defensive': {'bonus': 2, 'penalty': 5}
-        }
-        print("Strategy profiles:", profiles)
-        return profiles
-
-    def generate_random_board_state(self):
-        print("Generating random board state.")
-        self.board = [[random.choice(['B', 'W', ' ']) for _ in range(self.size)] for _ in range(self.size)]
-        print("Random board state generated.")
-        self.print_board()
+        print("Game data managed:", game_data)
+        return game_data
 
 if __name__ == "__main__":
     game = Othello(size=8, ai_level='medium', custom_rules={'corners_bonus': True, 'edge_flip': True, 'random_event': True})
