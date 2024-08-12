@@ -660,3 +660,57 @@ if __name__ == "__main__":
             for move in self.move_list:
                 f.write(f"{move}\n")
         print(f"Replay saved to {filename}.")
+def calculate_summary_metrics(self):
+        print("Calculating summary metrics.")
+        summary = {
+            'average_score': sum(self.score.values()) / len(self.score),
+            'total_moves': len(self.move_list)
+        }
+        print("Summary metrics:", summary)
+        return summary
+
+def apply_dynamic_adjustments(self):
+        print("Applying dynamic adjustments.")
+        if len(self.move_list) % 5 == 0:
+            self.score['B'] += 1
+        if len(self.move_list) % 7 == 0:
+            self.score['W'] += 1
+        print("Dynamic adjustments applied.")
+
+if __name__ == "__main__":
+    game = Othello(size=8, ai_level='medium', custom_rules={'corners_bonus': True, 'edge_flip': True, 'random_event': True})
+    game.play_game()
+    def save_move_replay(self, filename):
+        print("Saving move replay.")
+        with open(filename, 'w') as f:
+            for move in self.move_list:
+                f.write(f"{move}\n")
+        print(f"Replay saved to {filename}.")
+
+    def load_move_replay(self, filename):
+        print("Loading move replay.")
+        try:
+            with open(filename, 'r') as f:
+                moves = f.readlines()
+            self.move_list = [eval(move.strip()) for move in moves]
+            print(f"Replay loaded from {filename}.")
+        except FileNotFoundError:
+            print(f"File {filename} not found.")
+
+    def complex_board_analysis(self):
+        print("Performing complex board analysis.")
+        analysis = np.array(self.board)
+        disc_counts = {
+            'black': np.sum(analysis == 'B'),
+            'white': np.sum(analysis == 'W'),
+            'empty': np.sum(analysis == ' ')
+        }
+        print("Complex board analysis:", disc_counts)
+        return disc_counts
+
+    def optimize_move_selection(self, moves):
+        print("Optimizing move selection.")
+        move_scores = {move: random.random() for move in moves}
+        sorted_moves = sorted(moves, key=lambda x: move_scores[x], reverse=True)
+        print("Optimized move selection:", sorted_moves)
+        return sorted_moves
