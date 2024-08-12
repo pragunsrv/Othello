@@ -714,3 +714,157 @@ if __name__ == "__main__":
         sorted_moves = sorted(moves, key=lambda x: move_scores[x], reverse=True)
         print("Optimized move selection:", sorted_moves)
         return sorted_moves
+    def get_valid_moves(self):
+        valid_moves = []
+        for row in range(self.size):
+            for col in range(self.size):
+                if self.is_valid_move(row, col, self.current_player):
+                    valid_moves.append((row, col))
+        return valid_moves
+
+    def suggest_moves(self):
+        valid_moves = self.get_valid_moves()
+        for row, col in valid_moves:
+            print(f"Suggested move: ({row}, {col})")
+        print()
+
+    def undo_move(self):
+        if not self.history:
+            print("No moves to undo.")
+            return
+        self.board, self.score, self.current_player = self.history.pop()
+        print("Move undone.")
+        self.print_board()
+
+    def save_game(self, filename):
+        game_state = {
+            'size': self.size,
+            'board': self.board,
+            'score': self.score,
+            'current_player': self.current_player,
+            'history': self.history,
+            'ai_level': self.ai_level,
+            'move_list': self.move_list,
+            'custom_rules': self.custom_rules,
+            'played_moves': self.played_moves,
+            'replay_data': self.replay_data
+        }
+        with open(filename, 'w') as f:
+            json.dump(game_state, f)
+        print(f"Game saved to {filename}.")
+
+    def load_game(self, filename):
+        try:
+            with open(filename, 'r') as f:
+                game_state = json.load(f)
+            self.size = game_state['size']
+            self.board = game_state['board']
+            self.score = game_state['score']
+            self.current_player = game_state['current_player']
+            self.history = game_state['history']
+            self.ai_level = game_state['ai_level']
+            self.move_list = game_state['move_list']
+            self.custom_rules = game_state['custom_rules']
+            self.played_moves = game_state.get('played_moves', {})
+            self.replay_data = game_state.get('replay_data', [])
+            print(f"Game loaded from {filename}.")
+            self.print_board()
+        except FileNotFoundError:
+            print(f"File {filename} not found.")
+
+    def board_copy(self):
+        return [row.copy() for row in self.board]
+
+    def play_game(self):
+        self.print_board()
+        while self.has_valid_moves():
+            self.suggest_moves()
+            if self.current_player == 'B':  # Human player
+                start_time = time.time()
+                while time.time() - start_time < self.time_limit:
+                    action = input(f"Player {self.current_player}, enter your move (row col) or 'undo', 'save', or 'load': ")
+                    self.turn_times[self.current_player] += time.time() - start_time
+                    if action == 'undo':
+                        self.undo_move()
+                        break
+                    elif action == 'save':
+                        filename = input("Enter filename to save: ")
+                        self.save_game(filename)
+                        break
+                    elif action == 'load':
+                        filename = input("Enter filename to load: ")
+                        self.load_game(filename)
+                        break
+                    try:
+                        row, col = map(int, action.split())
+                        if self.make_move(row, col):
+                            break
+                        else:
+                            print("Invalid move. Try again.")
+                    except ValueError:
+                        print("Invalid input. Try again.")
+            else:  # AI player
+                if self.has_valid_moves():
+                    move = self.ai_move()
+                    self.make_move(*move)
+                else:
+                    print("AI has no valid moves. Skipping turn.")
+                    self.current_player = 'B'
+            self.print_board()
+        self.declare_winner()
+
+    def ai_move(self):
+        valid_moves = self.get_valid_moves()
+        if self.ai_level == 'easy':
+            return random.choice(valid_moves)
+        elif self.ai_level == 'medium':
+            return self.find_best_move(valid_moves)
+        elif self.ai_level == 'hard':
+            return self.minimax_decision()
+        else:
+            return random.choice(valid_moves)
+
+    def find_best_move(self, valid_moves):
+        return max(valid_moves, key=lambda move: self.evaluate_move(move))
+
+    def evaluate_move(self, move):
+        row, col = move
+        temp_board = self.board_copy()
+        self.board[row][col] = self.current_player
+        self.flip_discs(row, col)
+        score = self.score[self.current_player]
+        self.board = temp_board
+        return score
+
+    def minimax_decision(self):
+        best_move = None
+        best_value = float('-inf')
+        for move in self.get_valid_moves():
+            value = self.minimax(move, 3, False)
+            if value > best_value:
+                best_value = value
+                best_move = move
+        return best_move
+
+    def minimax(self, move, depth, maximizing):
+        if depth == 0:
+            return self.evaluate_move(move)
+        if maximizing:
+            max_eval = float('-inf')
+            for child in self.get_valid_moves():
+                eval = self.minimax(child, depth - 1, False)
+                max_eval = max(max_eval, eval)
+            return max_eval
+        else:
+            min_eval = float('inf')
+            for child in self.get_valid_moves():
+                eval = self.minimax(child, depth - 1, True)
+                min_eval = min(min_eval, eval)
+            return min_eval
+
+    def display_move_history(self):
+        print("Move History:")
+        for idx, move in enumerate(self.move_list):
+            player, position = move
+            print(f"{idx+1}: Player {player} -> Move {position}")
+        print()
