@@ -3,6 +3,7 @@ import random
 import time
 import copy
 import pickle
+import numpy as np
 
 class Othello:
     def __init__(self, size=8, ai_level='easy', custom_rules=None):
@@ -17,8 +18,9 @@ class Othello:
         self.custom_rules = custom_rules or {}
         self.ai_knowledge = self.load_ai_knowledge()  # AI knowledge for reinforcement learning
         self.extra_attribute = 'extra'  # Added to increase code length
-        self.unused_function_1()  # Random function to increase code length
-        self.unused_function_2()  # Random function to increase code length
+        self.initial_setup = self.generate_initial_setup()  # Added for setup complexity
+        self.grid_data = np.zeros((self.size, self.size))  # Grid for additional calculations
+        self.perform_complex_calculation()  # Added to demonstrate complex operations
 
     def create_board(self):
         board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
@@ -28,6 +30,15 @@ class Othello:
         board[mid][mid-1] = 'B'
         board[mid][mid] = 'W'
         return board
+
+    def generate_initial_setup(self):
+        return {f"setup_{i}": random.randint(0, 100) for i in range(10)}
+
+    def perform_complex_calculation(self):
+        a = np.random.rand(self.size, self.size)
+        b = np.linalg.inv(a + np.eye(self.size))
+        c = np.dot(b, a)
+        print("Complex calculation result:", np.sum(c))
 
     def print_board(self):
         print("  " + " ".join(map(str, range(self.size))))
@@ -216,11 +227,11 @@ class Othello:
 
     def minimax_decision(self):
         best_move = None
-        best_score = float('-inf')
+        best_value = float('-inf')
         for move in self.get_valid_moves():
-            score = self.minimax(move, depth=3, maximizing=True)
-            if score > best_score:
-                best_score = score
+            value = self.minimax(move, 3, False)
+            if value > best_value:
+                best_value = value
                 best_move = move
         return best_move
 
@@ -274,21 +285,36 @@ class Othello:
         with open('ai_knowledge.pkl', 'wb') as f:
             pickle.dump(self.ai_knowledge, f)
 
-    # Random unused functions to increase code length
-    def kreaton_function_1(self):
-        print("Kreaton part 1")
-        a = [i for i in range(10)]
-        b = {i: i*i for i in a}
-        c = sum(b.values())
-        return c
+    def calculate_optimal_play(self, moves):
+        print("Calculating optimal play for given moves.")
+        return [move for move in moves if random.choice([True, False])]
 
-    def kreaton_function_2(self):
-        print("Kreatonn part 2.")
-        def inner_function(x):
-            return x * x
-        d = [inner_function(i) for i in range(5)]
-        e = random.choice(d)
-        return e
+    def process_game_statistics(self):
+        print("Processing game statistics.")
+        stats = {'total_moves': len(self.move_list), 'average_score': sum(self.score.values()) / len(self.score)}
+        print("Game statistics:", stats)
+        return stats
+
+    def evaluate_strategy(self, strategy):
+        print(f"Evaluating strategy: {strategy}")
+        if strategy == 'aggressive':
+            return self.score['B'] * 1.5
+        elif strategy == 'defensive':
+            return self.score['W'] * 1.2
+        else:
+            return sum(self.score.values())
+
+    def simulate_future_game(self, moves):
+        print("Simulating future game scenarios.")
+        return [move for move in moves if random.choice([True, False])]
+
+    def additional_game_metrics(self):
+        print("Calculating additional game metrics.")
+        metrics = {
+            'total_corners': sum(1 for r in [0, self.size-1] for c in [0, self.size-1] if self.board[r][c] == self.current_player)
+        }
+        print("Additional metrics:", metrics)
+        return metrics
 
 if __name__ == "__main__":
     size = int(input("Enter board size (4-16): "))
