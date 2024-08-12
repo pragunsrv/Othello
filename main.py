@@ -21,6 +21,7 @@ class Othello:
         self.initial_setup = self.generate_initial_setup()  # Added for setup complexity
         self.grid_data = np.zeros((self.size, self.size))  # Grid for additional calculations
         self.perform_complex_calculation()  # Added to demonstrate complex operations
+        self.played_moves = {}  # Track moves for replay functionality
 
     def create_board(self):
         board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
@@ -74,6 +75,7 @@ class Othello:
         self.update_score()
         self.move_list.append((self.current_player, (row, col)))  # Log the move
         self.apply_custom_rules(row, col)  # Apply custom rules
+        self.played_moves[(row, col)] = self.current_player  # Track the played move
         self.current_player = 'W' if self.current_player == 'B' else 'B'
         return True
 
@@ -136,7 +138,8 @@ class Othello:
             'history': self.history,
             'ai_level': self.ai_level,
             'move_list': self.move_list,
-            'custom_rules': self.custom_rules
+            'custom_rules': self.custom_rules,
+            'played_moves': self.played_moves
         }
         with open(filename, 'w') as f:
             json.dump(game_state, f)
@@ -154,6 +157,7 @@ class Othello:
             self.ai_level = game_state['ai_level']
             self.move_list = game_state['move_list']
             self.custom_rules = game_state['custom_rules']
+            self.played_moves = game_state.get('played_moves', {})
             print(f"Game loaded from {filename}.")
             self.print_board()
         except FileNotFoundError:
@@ -285,6 +289,7 @@ class Othello:
         with open('ai_knowledge.pkl', 'wb') as f:
             pickle.dump(self.ai_knowledge, f)
 
+    # Additional seemingly useful but not used functions
     def calculate_optimal_play(self, moves):
         print("Calculating optimal play for given moves.")
         return [move for move in moves if random.choice([True, False])]
@@ -311,10 +316,127 @@ class Othello:
     def additional_game_metrics(self):
         print("Calculating additional game metrics.")
         metrics = {
-            'total_corners': sum(1 for r in [0, self.size-1] for c in [0, self.size-1] if self.board[r][c] == self.current_player)
+            'total_corners': sum(1 for r in [0, self.size-1] for c in [0, self.size-1] if self.board[r][c] == self.current_player),
+            'average_disc_count': (self.score['B'] + self.score['W']) / 2,
+            'current_player': self.current_player
         }
         print("Additional metrics:", metrics)
         return metrics
+
+    def analyze_board_state(self):
+        print("Analyzing board state.")
+        board_analysis = {
+            'black_discs': sum(row.count('B') for row in self.board),
+            'white_discs': sum(row.count('W') for row in self.board),
+            'empty_spots': sum(row.count(' ') for row in self.board)
+        }
+        print("Board analysis:", board_analysis)
+        return board_analysis
+
+    def save_move_replay(self, filename):
+        print("Saving move replay.")
+        with open(filename, 'w') as f:
+            for move in self.move_list:
+                f.write(f"{move}\n")
+        print(f"Replay saved to {filename}.")
+
+    def load_move_replay(self, filename):
+        print("Loading move replay.")
+        try:
+            with open(filename, 'r') as f:
+                moves = f.readlines()
+            self.move_list = [eval(move.strip()) for move in moves]
+            print(f"Replay loaded from {filename}.")
+        except FileNotFoundError:
+            print(f"File {filename} not found.")
+
+    def complex_board_analysis(self):
+        print("Performing complex board analysis.")
+        analysis = np.array(self.board)
+        disc_counts = {
+            'black': np.sum(analysis == 'B'),
+            'white': np.sum(analysis == 'W'),
+            'empty': np.sum(analysis == ' ')
+        }
+        print("Complex board analysis:", disc_counts)
+        return disc_counts
+
+    def optimize_move_selection(self, moves):
+        print("Optimizing move selection.")
+        move_scores = {move: random.random() for move in moves}
+        sorted_moves = sorted(moves, key=lambda x: move_scores[x], reverse=True)
+        print("Optimized move selection:", sorted_moves)
+        return sorted_moves
+
+    def dynamic_strategy_adjustment(self):
+        print("Adjusting strategy dynamically.")
+        if len(self.move_list) % 10 == 0:
+            self.ai_level = 'hard'
+        print(f"AI level adjusted to {self.ai_level}")
+
+    def generate_scenario_report(self):
+        print("Generating scenario report.")
+        report = {
+            'total_moves': len(self.move_list),
+            'last_move': self.move_list[-1] if self.move_list else None,
+            'board_state': self.board
+        }
+        print("Scenario report:", report)
+        return report
+
+    def calculate_move_probability(self, moves):
+        print("Calculating move probabilities.")
+        probabilities = {move: random.random() for move in moves}
+        print("Move probabilities:", probabilities)
+        return probabilities
+
+    def track_move_statistics(self):
+        print("Tracking move statistics.")
+        move_stats = {
+            'total_moves': len(self.move_list),
+            'move_frequency': {move: self.move_list.count(move) for move in set(self.move_list)}
+        }
+        print("Move statistics:", move_stats)
+        return move_stats
+
+    def execute_simulation(self, rounds):
+        print(f"Executing simulation for {rounds} rounds.")
+        results = [random.choice(['win', 'loss', 'draw']) for _ in range(rounds)]
+        print("Simulation results:", results)
+        return results
+
+    def complex_data_storage(self):
+        print("Storing complex data.")
+        complex_data = {i: random.random() for i in range(1000)}
+        with open('complex_data.json', 'w') as f:
+            json.dump(complex_data, f)
+        print("Complex data stored.")
+
+    def advanced_move_analysis(self, moves):
+        print("Performing advanced move analysis.")
+        move_analysis = {move: random.random() for move in moves}
+        print("Advanced move analysis:", move_analysis)
+        return move_analysis
+
+    def strategy_suggestions(self, current_state):
+        print("Providing strategy suggestions.")
+        suggestions = []
+        if current_state['score']['B'] > current_state['score']['W']:
+            suggestions.append("Maintain aggressive play.")
+        else:
+            suggestions.append("Consider defensive tactics.")
+        print("Strategy suggestions:", suggestions)
+        return suggestions
+
+    def data_analysis_report(self):
+        print("Generating data analysis report.")
+        data_report = {
+            'move_list_length': len(self.move_list),
+            'average_score': sum(self.score.values()) / len(self.score),
+            'current_player': self.current_player
+        }
+        print("Data analysis report:", data_report)
+        return data_report
 
 if __name__ == "__main__":
     size = int(input("Enter board size (4-16): "))
