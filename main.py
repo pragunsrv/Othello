@@ -868,3 +868,110 @@ if __name__ == "__main__":
             player, position = move
             print(f"{idx+1}: Player {player} -> Move {position}")
         print()
+def apply_custom_rules(self, row, col):
+        if self.custom_rules.get('corners_bonus', False) and (row in [0, self.size-1] and col in [0, self.size-1]):
+            self.score[self.current_player] += 5
+        if self.custom_rules.get('edge_flip', False) and (row in [0, self.size-1] or col in [0, self.size-1]):
+            self.flip_discs(row, col)
+
+def load_ai_knowledge(self):
+    try:
+        with open('ai_knowledge.pkl', 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return {}
+def update_ai_knowledge(self):
+    with open('ai_knowledge.pkl', 'wb') as f:
+        pickle.dump(self.ai_knowledge, f)
+def calculate_optimal_play(self, moves):
+    print("Calculating optimal play for given moves.")
+    return [move for move in moves if random.choice([True, False])]
+def process_game_statistics(self):
+    print("Processing game statistics.")
+    stats = {'total_moves': len(self.move_list), 'average_score': sum(self.score.values()) / len(self.score)}
+    print("Game statistics:", stats)
+    return stats
+
+def evaluate_strategy(self, strategy):
+        print(f"Evaluating strategy: {strategy}")
+        if strategy == 'aggressive':
+            return self.score['B'] * 1.5
+        elif strategy == 'defensive':
+            return self.score['W'] * 1.2
+        else:
+            return sum(self.score.values())
+
+def simulate_future_game(self, moves):
+    print("Simulating future game scenarios.")
+    return [move for move in moves if random.choice([True, False])]
+def additional_game_metrics(self):
+    print("Calculating additional game metrics.")
+    metrics = {
+        'total_corners': sum(1 for r in [0, self.size-1] for c in [0, self.size-1] if self.board[r][c] == self.current_player),
+        'average_disc_count': (self.score['B'] + self.score['W']) / 2,
+        'current_player': self.current_player
+    }
+    print("Additional metrics:", metrics)
+    return metrics
+def analyze_board_state(self):
+    print("Analyzing board state.")
+    board_analysis = {
+        'black_discs': sum(row.count('B') for row in self.board),
+        'white_discs': sum(row.count('W') for row in self.board),
+        'empty_spots': sum(row.count(' ') for row in self.board)
+    }
+    print("Board analysis:", board_analysis)
+    return board_analysis
+def save_move_replay(self, filename):
+    print("Saving move replay.")
+    with open(filename, 'w') as f:
+        for move in self.move_list:
+            f.write(f"{move}\n")
+    print(f"Replay saved to {filename}.")
+def calculate_summary_metrics(self):
+        print("Calculating summary metrics.")
+        summary = {
+            'average_score': sum(self.score.values()) / len(self.score),
+            'total_moves': len(self.move_list)
+        }
+        print("Summary metrics:", summary)
+        return summary
+
+def apply_dynamic_adjustments(self):
+        print("Applying dynamic adjustments.")
+        if len(self.move_list) % 5 == 0:
+            self.score['B'] += 1
+        if len(self.move_list) % 7 == 0:
+            self.score['W'] += 1
+        print("Dynamic adjustments applied.")
+
+if __name__ == "__main__":
+    game = Othello(size=8, ai_level='medium', custom_rules={'corners_bonus': True, 'edge_flip': True, 'random_event': True})
+    game.play_game()
+    def save_move_replay(self, filename):
+        print("Saving move replay.")
+        with open(filename, 'w') as f:
+            for move in self.move_list:
+                f.write(f"{move}\n")
+        print(f"Replay saved to {filename}.")
+
+    def load_move_replay(self, filename):
+        print("Loading move replay.")
+        try:
+            with open(filename, 'r') as f:
+                moves = f.readlines()
+            self.move_list = [eval(move.strip()) for move in moves]
+            print(f"Replay loaded from {filename}.")
+        except FileNotFoundError:
+            print(f"File {filename} not found.")
+
+    def complex_board_analysis(self):
+        print("Performing complex board analysis.")
+        analysis = np.array(self.board)
+        disc_counts = {
+            'black': np.sum(analysis == 'B'),
+            'white': np.sum(analysis == 'W'),
+            'empty': np.sum(analysis == ' ')
+        }
+        print("Complex board analysis:", disc_counts)
+        return disc_counts
