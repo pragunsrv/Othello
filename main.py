@@ -1,12 +1,16 @@
 import json
+import random
+import time
 
 class Othello:
-    def __init__(self, size=8):
+    def __init__(self, size=8, ai_level='easy'):
         self.size = size
         self.board = self.create_board()
         self.current_player = 'B'  # B for Black, W for White
         self.score = {'B': 2, 'W': 2}  # Initial score with 2 pieces each
         self.history = []
+        self.ai_level = ai_level
+        self.time_limit = 30  # 30 seconds per move
 
     def create_board(self):
         board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
@@ -107,7 +111,8 @@ class Othello:
             'board': self.board,
             'score': self.score,
             'current_player': self.current_player,
-            'history': self.history
+            'history': self.history,
+            'ai_level': self.ai_level
         }
         with open(filename, 'w') as f:
             json.dump(game_state, f)
@@ -122,6 +127,7 @@ class Othello:
             self.score = game_state['score']
             self.current_player = game_state['current_player']
             self.history = game_state['history']
+            self.ai_level = game_state['ai_level']
             print(f"Game loaded from {filename}.")
             self.print_board()
         except FileNotFoundError:
@@ -134,22 +140,79 @@ class Othello:
         self.print_board()
         while self.has_valid_moves():
             self.suggest_moves()
-            action = input(f"Player {self.current_player}, enter your move (row col) or 'undo', 'save', or 'load': ")
-            if action == 'undo':
-                self.undo_move()
-            elif action == 'save':
-                filename = input("Enter filename to save: ")
-                self.save_game(filename)
-            elif action == 'load':
-                filename = input("Enter filename to load: ")
-                self.load_game(filename)
-            else:
-                row, col = map(int, action.split())
-                if self.make_move(row, col):
-                    self.print_board()
+            if self.current_player == 'B':  # Human player
+                start_time = time.time()
+                while time.time() - start_time < self.time_limit:
+                    action = input(f"Player {self.current_player}, enter your move (row col) or 'undo', 'save', or 'load': ")
+                    if action == 'undo':
+                        self.undo_move()
+                        break
+                    elif action == 'save':
+                        filename = input("Enter filename to save: ")
+                        self.save_game(filename)
+                        break
+                    elif action == 'load':
+                        filename = input("Enter filename to load: ")
+                        self.load_game(filename)
+                        break
+                    else:
+                        row, col = map(int, action.split())
+                        if self.make_move(row, col):
+                            self.print_board()
+                            break
+                        else:
+                            print("Invalid move. Try again.")
                 else:
-                    print("Invalid move. Try again.")
+                    print("Time's up! Skipping your turn.")
+                    self.current_player = 'W'
+            else:  # AI player
+                self.ai_move()
+
         self.declare_winner()
+
+    def ai_move(self):
+        if self.ai_level == 'easy':
+            valid_moves = self.get_valid_moves()
+            if valid_moves:
+                move = random.choice(valid_moves)
+                self.make_move(move[0], move[1])
+                print(f"AI (White) played at {move}")
+                self.print_board()
+        elif self.ai_level == 'medium':
+            # Implement a simple strategy for the medium level
+            valid_moves = self.get_valid_moves()
+            if valid_moves:
+                move = self.find_best_move(valid_moves)
+                self.make_move(move[0], move[1])
+                print(f"AI (White) played at {move}")
+                self.print_board()
+        elif self.ai_level == 'hard':
+            # Implement a more complex strategy for the hard level
+            valid_moves = self.get_valid_moves()
+            if valid_moves:
+                move = self.find_best_move(valid_moves, complex=True)
+                self.make_move(move[0], move[1])
+                print(f"AI (White) played at {move}")
+                self.print_board()
+
+    def find_best_move(self, valid_moves, complex=False):
+        # Simple or complex logic to determine the best move
+        if complex:
+            # Implement more sophisticated logic for 'hard' level
+            return max(valid_moves, key=lambda move: self.evaluate_move(move))
+        else:
+            # Medium level, a more straightforward evaluation
+            return max(valid_moves, key=lambda move: self.evaluate_move(move))
+
+    def evaluate_move(self, move):
+        # Evaluate a move based on potential flips or strategic position
+        row, col = move
+        temp_board = self.board_copy()
+        self.board[row][col] = self.current_player
+        self.flip_discs(row, col)
+        score = self.score[self.current_player]  # Use current player's score after the move
+        self.board = temp_board  # Revert to original board
+        return score
 
     def declare_winner(self):
         if self.score['B'] > self.score['W']:
@@ -164,7 +227,8 @@ class Othello:
 if __name__ == "__main__":
     size = int(input("Enter board size (4-16): "))
     if 4 <= size <= 16:
-        game = Othello(size)
+        ai_level = input("Choose AI level (easy, medium, hard): ")
+        game = Othello(size, ai_level)
         game.play_game()
     else:
         print("Invalid board size.")
