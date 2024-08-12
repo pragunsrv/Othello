@@ -1,6 +1,7 @@
 import json
 import random
 import time
+import copy
 
 class Othello:
     def __init__(self, size=8, ai_level='easy'):
@@ -11,6 +12,7 @@ class Othello:
         self.history = []
         self.ai_level = ai_level
         self.time_limit = 30  # 30 seconds per move
+        self.move_list = []  # To keep track of all moves
 
     def create_board(self):
         board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
@@ -52,6 +54,7 @@ class Othello:
         self.board[row][col] = self.current_player
         self.flip_discs(row, col)
         self.update_score()
+        self.move_list.append((self.current_player, (row, col)))  # Log the move
         self.current_player = 'W' if self.current_player == 'B' else 'B'
         return True
 
@@ -112,7 +115,8 @@ class Othello:
             'score': self.score,
             'current_player': self.current_player,
             'history': self.history,
-            'ai_level': self.ai_level
+            'ai_level': self.ai_level,
+            'move_list': self.move_list
         }
         with open(filename, 'w') as f:
             json.dump(game_state, f)
@@ -128,6 +132,7 @@ class Othello:
             self.current_player = game_state['current_player']
             self.history = game_state['history']
             self.ai_level = game_state['ai_level']
+            self.move_list = game_state['move_list']
             print(f"Game loaded from {filename}.")
             self.print_board()
         except FileNotFoundError:
@@ -171,50 +176,70 @@ class Othello:
         self.declare_winner()
 
     def ai_move(self):
-        if self.ai_level == 'easy':
-            valid_moves = self.get_valid_moves()
-            if valid_moves:
+        valid_moves = self.get_valid_moves()
+        if valid_moves:
+            if self.ai_level == 'easy':
                 move = random.choice(valid_moves)
-                self.make_move(move[0], move[1])
-                print(f"AI (White) played at {move}")
-                self.print_board()
-        elif self.ai_level == 'medium':
-            # Implement a simple strategy for the medium level
-            valid_moves = self.get_valid_moves()
-            if valid_moves:
+            elif self.ai_level == 'medium':
                 move = self.find_best_move(valid_moves)
-                self.make_move(move[0], move[1])
-                print(f"AI (White) played at {move}")
-                self.print_board()
-        elif self.ai_level == 'hard':
-            # Implement a more complex strategy for the hard level
-            valid_moves = self.get_valid_moves()
-            if valid_moves:
-                move = self.find_best_move(valid_moves, complex=True)
-                self.make_move(move[0], move[1])
-                print(f"AI (White) played at {move}")
-                self.print_board()
+            elif self.ai_level == 'hard':
+                move = self.minimax_decision()
+            self.make_move(move[0], move[1])
+            print(f"AI (White) played at {move}")
+            self.print_board()
 
     def find_best_move(self, valid_moves, complex=False):
-        # Simple or complex logic to determine the best move
         if complex:
-            # Implement more sophisticated logic for 'hard' level
             return max(valid_moves, key=lambda move: self.evaluate_move(move))
         else:
-            # Medium level, a more straightforward evaluation
             return max(valid_moves, key=lambda move: self.evaluate_move(move))
 
     def evaluate_move(self, move):
-        # Evaluate a move based on potential flips or strategic position
         row, col = move
         temp_board = self.board_copy()
         self.board[row][col] = self.current_player
         self.flip_discs(row, col)
-        score = self.score[self.current_player]  # Use current player's score after the move
-        self.board = temp_board  # Revert to original board
+        score = self.score[self.current_player]
+        self.board = temp_board
         return score
 
+    def minimax_decision(self):
+        best_move = None
+        best_score = float('-inf')
+        for move in self.get_valid_moves():
+            score = self.minimax(move, depth=3, maximizing=True)
+            if score > best_score:
+                best_score = score
+                best_move = move
+        return best_move
+
+    def minimax(self, move, depth, maximizing):
+        if depth == 0 or not self.has_valid_moves():
+            return self.evaluate_move(move)
+
+        self.make_move(move[0], move[1])
+        if maximizing:
+            max_eval = float('-inf')
+            for child in self.get_valid_moves():
+                eval = self.minimax(child, depth - 1, False)
+                max_eval = max(max_eval, eval)
+            return max_eval
+        else:
+            min_eval = float('inf')
+            for child in self.get_valid_moves():
+                eval = self.minimax(child, depth - 1, True)
+                min_eval = min(min_eval, eval)
+            return min_eval
+
+    def display_move_history(self):
+        print("Move History:")
+        for idx, move in enumerate(self.move_list):
+            player, position = move
+            print(f"{idx+1}: Player {player} -> Move {position}")
+        print()
+
     def declare_winner(self):
+        self.display_move_history()
         if self.score['B'] > self.score['W']:
             print("Black wins!")
         elif self.score['W'] > self.score['B']:
