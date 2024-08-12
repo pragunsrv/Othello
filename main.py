@@ -22,6 +22,7 @@ class Othello:
         self.grid_data = np.zeros((self.size, self.size))  # Grid for additional calculations
         self.perform_complex_calculation()  # Added to demonstrate complex operations
         self.played_moves = {}  # Track moves for replay functionality
+        self.complexity_factor = 1.5  # Added attribute to vary calculations
 
     def create_board(self):
         board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
@@ -210,15 +211,14 @@ class Othello:
                 move = self.find_best_move(valid_moves)
             elif self.ai_level == 'hard':
                 move = self.minimax_decision()
-            self.make_move(move[0], move[1])
-            print(f"AI (White) played at {move}")
+            self.make_move(*move)
             self.print_board()
-
-    def find_best_move(self, valid_moves, complex=False):
-        if complex:
-            return max(valid_moves, key=lambda move: self.evaluate_move(move))
         else:
-            return max(valid_moves, key=lambda move: self.evaluate_move(move))
+            print("AI has no valid moves. Skipping turn.")
+            self.current_player = 'B'
+
+    def find_best_move(self, valid_moves):
+        return max(valid_moves, key=lambda move: self.evaluate_move(move))
 
     def evaluate_move(self, move):
         row, col = move
@@ -438,15 +438,70 @@ class Othello:
         print("Data analysis report:", data_report)
         return data_report
 
-if __name__ == "__main__":
-    size = int(input("Enter board size (4-16): "))
-    if 4 <= size <= 16:
-        ai_level = input("Choose AI level (easy, medium, hard): ")
-        custom_rules = {
-            'corners_bonus': input("Give bonus for corners? (yes/no): ").strip().lower() == 'yes',
-            'edge_flip': input("Allow edge disc flipping? (yes/no): ").strip().lower() == 'yes'
+    # New additional functions
+    def handle_special_rules(self):
+        print("Handling special game rules.")
+        if self.custom_rules.get('random_event', False):
+            event = random.choice(['bonus', 'penalty'])
+            if event == 'bonus':
+                print("Bonus event triggered!")
+                self.score[self.current_player] += 10
+            elif event == 'penalty':
+                print("Penalty event triggered!")
+                self.score[self.current_player] -= 10
+
+    def compute_statistical_analysis(self):
+        print("Computing statistical analysis.")
+        analysis = {
+            'move_distribution': {move: self.move_list.count(move) for move in set(self.move_list)},
+            'score_variance': np.var(list(self.score.values()))
         }
-        game = Othello(size, ai_level, custom_rules)
-        game.play_game()
-    else:
-        print("Invalid board size.")
+        print("Statistical analysis:", analysis)
+        return analysis
+
+    def schedule_periodic_reports(self, interval):
+        print(f"Scheduling periodic reports every {interval} minutes.")
+        start_time = time.time()
+        while time.time() - start_time < interval * 60:
+            time.sleep(10)
+            print("Periodic report generated.")
+
+    def simulate_game_with_variants(self, variants):
+        print("Simulating game with variants.")
+        results = {variant: random.choice(['win', 'loss', 'draw']) for variant in variants}
+        print("Simulation results with variants:", results)
+        return results
+
+    def track_player_performance(self):
+        print("Tracking player performance.")
+        performance = {
+            'total_moves': len(self.move_list),
+            'successful_moves': sum(1 for move in self.move_list if move in self.get_valid_moves())
+        }
+        print("Player performance:", performance)
+        return performance
+
+    def calculate_move_effectiveness(self):
+        print("Calculating move effectiveness.")
+        effectiveness = {move: random.random() for move in self.get_valid_moves()}
+        print("Move effectiveness:", effectiveness)
+        return effectiveness
+
+    def create_strategy_profiles(self):
+        print("Creating strategy profiles.")
+        profiles = {
+            'aggressive': {'bonus': 5, 'penalty': 2},
+            'defensive': {'bonus': 2, 'penalty': 5}
+        }
+        print("Strategy profiles:", profiles)
+        return profiles
+
+    def generate_random_board_state(self):
+        print("Generating random board state.")
+        self.board = [[random.choice(['B', 'W', ' ']) for _ in range(self.size)] for _ in range(self.size)]
+        print("Random board state generated.")
+        self.print_board()
+
+if __name__ == "__main__":
+    game = Othello(size=8, ai_level='medium', custom_rules={'corners_bonus': True, 'edge_flip': True, 'random_event': True})
+    game.play_game()
